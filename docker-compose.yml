@@ -1,13 +1,31 @@
 version: '3.8'
 
 services:
+  # Веб-сервер Nginx
   web:
     image: nginx:latest
     ports:
-      - "8080:80"
+      - "8080:80"  # Пробрасываем порт наружу
+    volumes:
+      - ./www/html:/var/www/html
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - php
+    networks:
+      - internal
+      - default
+
+  # PHP процессор
+  php:
+    image: php:7.4-fpm
+    volumes:
+      - ./www/html:/var/www/html
+    networks:
+      - internal
     depends_on:
       - db
 
+  # База данных MySQL
   db:
     image: mysql:5.7
     environment:
@@ -17,3 +35,14 @@ services:
       MYSQL_PASSWORD: userpass
     ports:
       - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - internal
+
+volumes:
+  db_data:
+
+networks:
+  internal:
+    driver: bridge
